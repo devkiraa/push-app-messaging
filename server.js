@@ -30,16 +30,39 @@ wss.on('connection', (ws, request) => {
 });
 
 // API to send notifications
-app.post('/send-notification', (req, res) => {
-  const { deviceID, message } = req.body;
+app.post('/send-notification', async (req, res) => {
+  const { userID, message } = req.body;
 
-  if (connectedClients[deviceID]) {
-    connectedClients[deviceID].send(message); // Send message to WebSocket client
-    console.log(`Notification sent to device ${deviceID}: ${message}`);
-    res.status(200).send('Notification sent!');
-  } else {
-    console.error(`Device not connected: ${deviceID}`);
-    res.status(404).send('Device not connected.');
+  if (!userID || !message) {
+    return res.status(400).send('User ID and message are required.');
+  }
+
+  try {
+    // Query the database for the latest device associated with the userID
+    const [rows] = await db.execute(
+      'SELECT device_id FROM devices WHERE user_id = ? ORDER BY created_at DESC LIMIT 1',
+      [userID]
+    );
+
+    if (rows.length === 0) {
+      console.error(`No devices found for user: ${userID}`);
+      return res.status(404).send('No devices found for this user.');
+    }
+
+    const deviceID = rows[0].device_id;
+
+    // Check if the device is connected
+    if (connectedClients[deviceID]) {
+      connectedClients[deviceID].send(message); // Send message to the WebSocket client
+      console.log(`Notification sent to device ${deviceID}: ${message}`);
+      res.status(200).send('Notification sent!');
+    } else {
+      console.error(`Device not connected: ${deviceID}`);
+      res.status(404).send('Device not connected.');
+    }
+  } catch (err) {
+    console.error('Error sending notification:', err.message);
+    res.status(500).send('Error sending notification.');
   }
 });
 
