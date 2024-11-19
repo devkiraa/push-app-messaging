@@ -43,7 +43,7 @@ app.post('/send-notification', (req, res) => {
   }
 });
 
-// Register device routes
+// Register device routes (handles device registration)
 app.use('/api/devices', deviceRoutes); // Use the device routes for registering devices
 
 // WebSocket Upgrade
