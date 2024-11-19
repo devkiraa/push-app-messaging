@@ -55,14 +55,27 @@ app.post('/send-notification', async (req, res) => {
     if (connectedClients[deviceID]) {
       connectedClients[deviceID].send(message); // Send message to the WebSocket client
       console.log(`Notification sent to device ${deviceID}: ${message}`);
-      res.status(200).send('Notification sent!');
+
+      // Respond with success and include the device_id
+      res.status(200).json({
+        success: true,
+        message: 'Notification sent!',
+        device_id: deviceID, // Include the device_id in the response
+      });
     } else {
       console.error(`Device not connected: ${deviceID}`);
-      res.status(404).send('Device not connected.');
+      res.status(404).json({
+        success: false,
+        error: 'Device not connected.',
+        device_id: deviceID, // Include the device_id in the response
+      });
     }
   } catch (err) {
     console.error('Error sending notification:', err.message);
-    res.status(500).send('Error sending notification.');
+    res.status(500).json({
+      success: false,
+      error: 'Error sending notification.',
+    });
   }
 });
 
