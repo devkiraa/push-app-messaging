@@ -28,10 +28,16 @@ router.post('/', async (req, res) => {
       // Send the message to the WebSocket client
       connectedClients[deviceID].send(message);
       console.log(`Notification sent to User ${userID} (Device: ${deviceID}): ${message}`);
-      return res.status(200).send('Notification sent!');
+      return res.status(200).json({
+        message: 'Notification sent!',
+        deviceID: deviceID, // Include device ID in the response
+      });
     } else {
       console.error(`Device not connected for User ID: ${userID}`);
-      return res.status(404).send('Device not connected.');
+      return res.status(404).json({
+        error: 'Device not connected.',
+        deviceID: deviceID, // Include device ID in the response even if not connected
+      });
     }
   } catch (err) {
     console.error('Error sending notification:', err.message);
