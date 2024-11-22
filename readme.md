@@ -1,7 +1,3 @@
-Here’s a `README.md` file designed both for human users and as a prompt for AI systems to understand the API's functionality.
-
----
-
 # Device Notification API
 
 This API enables user-device registration, real-time WebSocket communication, and notification delivery to registered devices. Below is a detailed description of the available endpoints, including their functionality, input requirements, and example responses.
@@ -181,5 +177,3 @@ This project is licensed under the MIT License. Feel free to use and modify.
 - Notifications are sent in real-time to connected devices via WebSockets.
 - If a device is not connected, an appropriate error response is returned.
 - Ensure the WebSocket server and REST API work seamlessly together, using the `connectedClients` map to track active connections.
-
-This documentation should provide sufficient information for both humans and AI to understand the API's purpose and usage.
