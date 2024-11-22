@@ -1,8 +1,8 @@
 const express = require('express');
 const WebSocket = require('ws');
-const dotenv = require("dotenv");
+const dotenv = require('dotenv');
 const deviceRoutes = require('./routes/devices'); // Import the devices routes
-const db = require('./models/db'); // Import the database connection from db.js
+const connectedClients = require('./connectedClients'); // Import connected clients map
 
 dotenv.config();
 
@@ -14,7 +14,6 @@ app.use(express.json());
 
 // WebSocket Server
 const wss = new WebSocket.Server({ noServer: true });
-let connectedClients = {};
 
 // Handle WebSocket connections
 wss.on('connection', (ws, request) => {
@@ -29,58 +28,8 @@ wss.on('connection', (ws, request) => {
   });
 });
 
-// API to send notifications
-app.post('/send-notification', async (req, res) => {
-  const { userID, message } = req.body;
-
-  if (!userID || !message) {
-    return res.status(400).send('User ID and message are required.');
-  }
-
-  try {
-    // Query the database for the latest device associated with the userID
-    const [rows] = await db.execute(
-      'SELECT device_id FROM devices WHERE user_id = ? ORDER BY created_at DESC LIMIT 1',
-      [userID]
-    );
-
-    if (rows.length === 0) {
-      console.error(`No devices found for user: ${userID}`);
-      return res.status(404).send('No devices found for this user.');
-    }
-
-    const deviceID = rows[0].device_id;
-
-    // Check if the device is connected
-    if (connectedClients[deviceID]) {
-      connectedClients[deviceID].send(message); // Send message to the WebSocket client
-      console.log(`Notification sent to device ${deviceID}: ${message}`);
-
-      // Respond with success and include the device_id
-      res.status(200).json({
-        success: true,
-        message: 'Notification sent!',
-        device_id: deviceID, // Include the device_id in the response
-      });
-    } else {
-      console.error(`Device not connected: ${deviceID}`);
-      res.status(404).json({
-        success: false,
-        error: 'Device not connected.',
-        device_id: deviceID, // Include the device_id in the response
-      });
-    }
-  } catch (err) {
-    console.error('Error sending notification:', err.message);
-    res.status(500).json({
-      success: false,
-      error: 'Error sending notification.',
-    });
-  }
-});
-
-// Register device routes (handles device registration)
-app.use('/api/devices', deviceRoutes); // Use the device routes for registering devices
+// Register device routes
+app.use('/api/devices', deviceRoutes);
 
 // WebSocket Upgrade
 const server = app.listen(port, () => {
